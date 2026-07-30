@@ -642,7 +642,7 @@ export default function Portfolio() {
             </p>
             <p>
               I could never communicate it as well as Lynda Barry, so I&apos;d
-              recommend her book <cite>Making Comics</cite> to anybody who
+              recommend her book <cite>Making Comics</cite>{" "}to anybody who
               thinks they can&apos;t draw.
             </p>
           </aside>
