@@ -33,5 +33,7 @@ test("renders development preview metadata", async () => {
 
   assert.match(html, developmentPreviewMeta);
   assert.match(html, /BUGNUT/);
+  assert.match(html, /Hello! Have a look at my comics!/);
+  assert.match(html, /buy yourself a copy or twelve/);
   assert.match(html, /Featured minis/);
 });

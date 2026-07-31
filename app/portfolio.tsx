@@ -22,6 +22,7 @@ import {
 } from "./artworks";
 
 const marqueeComics = [...miniComics, ...longerComics];
+const wordmarkLetters = [..."BUGNUT"];
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -491,8 +492,21 @@ export default function Portfolio() {
       <main>
         <section className="hero" id="top">
           <div className="hero__intro">
-            <h1>BUGNUT</h1>
+            <h1 className="bugnut-wordmark" aria-label="Bugnut">
+              {wordmarkLetters.map((letter, index) => (
+                <span
+                  aria-hidden="true"
+                  className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
+                  key={`${letter}-${index}`}
+                >
+                  {letter}
+                </span>
+              ))}
+            </h1>
             <p className="hero__descriptor">Comics &amp; drawings</p>
+            <p className="hero__greeting">
+              Hello! Have a look at my comics!
+            </p>
             <a className="button button--red" href="#featured">
               Browse comics <span aria-hidden="true">↓</span>
             </a>
@@ -615,35 +629,36 @@ export default function Portfolio() {
               I make comics because it&apos;s fun.
             </p>
             <p>
-              Nothing to me is more satisfying than sitting down, pouring hours
-              of thought, love, and care into a page, and as a result getting a
-              little sharable physical piece of media that wouldn&apos;t
-              otherwise have existed. I get to listen to music, I get to refine
-              my process, and I get to enjoy every step of it.
+              Nothing is more satisfying to me than sitting down, pouring hours
+              of thought, love, and care into a page, and ending up with a
+              little physical piece of media I can share, one that
+              wouldn&apos;t otherwise exist. I get to listen to music, I get to
+              refine my process, and I get to enjoy every step of it.
             </p>
             <p>
               The thing I find most fun about comics is the freedom. I get to
-              turn my silly ideas into silly scenarios, and figure out a way to
+              turn my silly ideas into silly scenarios and figure out a way to
               turn those scenarios into easily digestible visual punchlines.
             </p>
             <p>
               My comics tend to be a bit silly. I aim to subvert expectations
-              at least once per comic, and figuring out ways to do that is a fun
-              (but difficult!) part of the process for me.
+              at least once in every comic, and figuring out how to do that is a
+              fun (but difficult!) part of the process for me.
             </p>
           </div>
           <aside className="about__aside">
+            <p>To someone who says they can&apos;t draw, I would say:</p>
             <p className="about__yes">YES, YOU CAN!</p>
             <p>
               If you exist and are reading this, you can make art. Comics
-              aren&apos;t about realism. They&apos;re about expression. And you
+              aren&apos;t about realism. They&apos;re about expression. You
               don&apos;t have to be “good” at drawing in order to express
               yourself.
             </p>
             <p>
-              I could never communicate it as well as Lynda Barry, so I&apos;d
-              recommend her book <cite>Making Comics</cite>{" "}to anybody who
-              thinks they can&apos;t draw.
+              I could never communicate that as well as Lynda Barry, so I
+              recommend her book <cite>Making Comics</cite>{" "}
+              to anybody who thinks they can&apos;t draw.
             </p>
           </aside>
         </section>
