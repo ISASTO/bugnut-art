@@ -187,20 +187,36 @@ img {
 }
 
 .bugnut-wordmark {
+  display: grid;
+  width: fit-content;
+  place-items: center;
+  padding: 0.16em 0.16em 0.2em 0.08em;
+  isolation: isolate;
+}
+
+.bugnut-wordmark__layer {
   display: flex;
+  grid-area: 1 / 1;
   width: fit-content;
   align-items: center;
   justify-content: center;
-  padding: 0.16em 0.16em 0.2em 0.08em;
+}
+
+.bugnut-wordmark__layer--shadow {
+  z-index: 0;
+  color: var(--sky);
+  transform: translate(0.055em, 0.075em);
+}
+
+.bugnut-wordmark__layer--face {
+  z-index: 1;
 }
 
 .bugnut-wordmark__letter {
   position: relative;
   display: inline-block;
   min-width: 0.72em;
-  paint-order: stroke fill;
-  -webkit-text-stroke: 0.012em var(--ink);
-  text-shadow: 0.055em 0.075em 0 var(--sky);
+  text-align: center;
   transform-origin: 50% 58%;
   will-change: transform;
   animation-timing-function: ease-in-out;
@@ -208,21 +224,26 @@ img {
   animation-direction: alternate;
 }
 
-.bugnut-wordmark__letter--1,
-.bugnut-wordmark__letter--5 {
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter {
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.025em var(--ink);
+}
+
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter--1,
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter--5 {
   color: var(--red);
 }
 
-.bugnut-wordmark__letter--2,
-.bugnut-wordmark__letter--6 {
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter--2,
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter--6 {
   color: var(--yellow);
 }
 
-.bugnut-wordmark__letter--3 {
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter--3 {
   color: var(--sky);
 }
 
-.bugnut-wordmark__letter--4 {
+.bugnut-wordmark__layer--face .bugnut-wordmark__letter--4 {
   color: var(--green);
 }
 
@@ -1019,6 +1040,16 @@ img {
   color: rgba(251, 247, 236, 0.85);
   font-family: var(--serif);
   font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+}
+
+.bazaar__store-link {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.bazaar__store-link:hover {
+  color: var(--paper-light);
 }
 
 .coming-soon {
