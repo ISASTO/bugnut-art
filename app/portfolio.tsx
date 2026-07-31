@@ -173,7 +173,7 @@ function FeaturedCard({
 }
 
 function buildReaderGroups(artwork: Artwork, narrow: boolean) {
-  if (narrow || artwork.kind !== "mini" || artwork.pageCount <= 2) {
+  if (narrow || artwork.kind === "other" || artwork.pageCount <= 2) {
     return Array.from({ length: artwork.pageCount }, (_, index) => [index]);
   }
 
@@ -208,9 +208,6 @@ function readerPositionLabel(artwork: Artwork, pages: number[]) {
   const first = pages[0];
 
   if (artwork.kind === "other") return "Single-page comic";
-  if (artwork.kind === "long") {
-    return `Page ${first + 1} of ${artwork.pageCount}`;
-  }
 
   const backCoverIndex = artwork.pageCount - 1;
   if (first === 0) return "Front cover";
@@ -493,15 +490,32 @@ export default function Portfolio() {
         <section className="hero" id="top">
           <div className="hero__intro">
             <h1 className="bugnut-wordmark" aria-label="Bugnut">
-              {wordmarkLetters.map((letter, index) => (
-                <span
-                  aria-hidden="true"
-                  className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
-                  key={`${letter}-${index}`}
-                >
-                  {letter}
-                </span>
-              ))}
+              <span
+                className="bugnut-wordmark__layer bugnut-wordmark__layer--shadow"
+                aria-hidden="true"
+              >
+                {wordmarkLetters.map((letter, index) => (
+                  <span
+                    className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
+                    key={`shadow-${letter}-${index}`}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </span>
+              <span
+                className="bugnut-wordmark__layer bugnut-wordmark__layer--face"
+                aria-hidden="true"
+              >
+                {wordmarkLetters.map((letter, index) => (
+                  <span
+                    className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
+                    key={`face-${letter}-${index}`}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </span>
             </h1>
             <p className="hero__descriptor">Comics &amp; drawings</p>
             <p className="hero__greeting">
@@ -666,16 +680,30 @@ export default function Portfolio() {
         <section className="bazaar" id="bazaar">
           <div className="bazaar__checker" aria-hidden="true" />
           <div className="bazaar__copy">
-            <h2>{siteSettings.shopName}</h2>
+            <h2>Want one you can hold?</h2>
             {siteSettings.shopUrl ? (
-              <a
-                className="button button--paper"
-                href={siteSettings.shopUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Visit the Bazaar <span aria-hidden="true">↗</span>
-              </a>
+              <>
+                <p>
+                  <a
+                    className="bazaar__store-link"
+                    href={siteSettings.shopUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Click here to visit my store, where you can buy physical
+                    copies of my comics (and more!)
+                    <span aria-hidden="true"> ↗</span>
+                  </a>
+                </p>
+                <a
+                  className="button button--paper"
+                  href={siteSettings.shopUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Visit the Bazaar <span aria-hidden="true">↗</span>
+                </a>
+              </>
             ) : (
               <span className="coming-soon">Opening soon</span>
             )}
