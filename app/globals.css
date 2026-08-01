@@ -536,7 +536,7 @@ img {
 
 .section-heading > p {
   max-width: 36rem;
-  margin: 0;
+  margin: 1rem 0 0;
   color: var(--ink-soft);
   font-family: var(--serif);
   font-size: clamp(1.05rem, 1.7vw, 1.3rem);
@@ -682,6 +682,7 @@ img {
 
 .mini-card__image::after {
   position: absolute;
+  z-index: 1;
   inset: 0;
   content: "";
   border: 1px solid rgba(41, 37, 31, 0.28);
@@ -701,6 +702,7 @@ img {
 
 .read-sticker {
   position: absolute;
+  z-index: 2;
   right: -0.4rem;
   bottom: 0.7rem;
   display: grid;
@@ -731,21 +733,23 @@ img {
 
 .mini-card__copy {
   display: flex;
-  justify-content: space-between;
-  gap: 0.8rem;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
   padding-top: 1.15rem;
 }
 
 .mini-card__copy strong {
+  display: block;
+  width: 100%;
   font-family: var(--serif);
-  font-size: clamp(1.25rem, 1.8vw, 1.65rem);
+  font-size: clamp(1.12rem, 1.65vw, 1.55rem);
   letter-spacing: -0.03em;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .mini-card__copy span {
-  flex: 0 0 auto;
   color: var(--ink-soft);
   font-size: 0.62rem;
   font-weight: 800;
@@ -856,23 +860,30 @@ img {
 }
 
 .other-card__image {
+  position: relative;
   width: 100%;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   border: 2px solid var(--ink);
   background: var(--paper-light);
   box-shadow: 6px 7px 0 var(--ink);
-  cursor: zoom-in;
+  cursor: pointer;
+  transform-origin: 50% 50%;
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .other-card__image img {
   width: 100%;
   aspect-ratio: 0.71;
   object-fit: cover;
-  transition: transform 220ms ease;
 }
 
-.other-card__image:hover img {
+.other-card__image:hover,
+.other-card__image:focus-visible {
+  z-index: 2;
+  box-shadow: 8px 10px 0 var(--ink);
   transform: scale(1.018);
 }
 
@@ -1598,16 +1609,7 @@ img {
   }
 
   .mini-card__copy {
-    display: block;
-  }
-
-  .mini-card__copy strong,
-  .mini-card__copy span {
-    display: block;
-  }
-
-  .mini-card__copy span {
-    margin-top: 0.35rem;
+    gap: 0.3rem;
   }
 
   .read-sticker {
