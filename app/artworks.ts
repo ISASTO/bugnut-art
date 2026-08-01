@@ -3,6 +3,7 @@ export type ArtworkKind = "mini" | "long" | "other";
 export type Artwork = {
   id: string;
   title: string;
+  description?: string;
   completed: string;
   kind: ArtworkKind;
   pageCount: number;
@@ -100,6 +101,7 @@ export const artworks: Artwork[] = [
   {
     id: "born-a-clown",
     title: "Born a Clown",
+    description: "A clown navigates the world and identity.",
     completed: "2026-01-12",
     kind: "long",
     pageCount: 12,
@@ -108,6 +110,8 @@ export const artworks: Artwork[] = [
   {
     id: "godly-powers",
     title: "What Would You Do With Godly Powers?",
+    description:
+      "A rodent and an amphibian discuss the implications of being granted godly powers.",
     completed: "2025-11-28",
     kind: "long",
     pageCount: 9,
