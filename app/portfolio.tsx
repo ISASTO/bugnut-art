@@ -584,6 +584,7 @@ export default function Portfolio() {
                     {artwork.pageCount} pages · {formatDate(artwork.completed)}
                   </p>
                   <h3>{artwork.title}</h3>
+                  {artwork.description ? <p>{artwork.description}</p> : null}
                   <button
                     className="button button--paper"
                     onClick={() => openReader(artwork)}
@@ -601,6 +602,10 @@ export default function Portfolio() {
         <section className="section section--other" id="other-work">
           <div className="section-heading section-heading--line">
             <h2>Other work</h2>
+            <p>
+              This is where I put my single-page comics and other work that
+              doesn&apos;t quite fall into a neat category.
+            </p>
           </div>
           <div className="other-grid">
             {otherWork.map((artwork, index) => (
@@ -653,11 +658,6 @@ export default function Portfolio() {
               The thing I find most fun about comics is the freedom. I get to
               turn my silly ideas into silly scenarios and figure out a way to
               turn those scenarios into easily digestible visual punchlines.
-            </p>
-            <p>
-              My comics tend to be a bit silly. I aim to subvert expectations
-              at least once in every comic, and figuring out how to do that is a
-              fun (but difficult!) part of the process for me.
             </p>
           </div>
           <aside className="about__aside">
@@ -720,7 +720,7 @@ export default function Portfolio() {
           <span className="site-footer__brand">BUGNUT</span>
         </div>
         <div className="site-footer__contact">
-          <p>Contact</p>
+          <p>Have something to say? Send me a message! Anything you want!</p>
           <a href={`mailto:${siteSettings.contactEmail}`}>
             {siteSettings.contactEmail} <span aria-hidden="true">↗</span>
           </a>
