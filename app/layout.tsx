@@ -23,8 +23,11 @@ export const metadata: Metadata = {
     "codex-preview": "development",
   },
   icons: {
-    icon: `${basePath}/favicon.svg`,
-    shortcut: `${basePath}/favicon.svg`,
+    icon: {
+      url: `${basePath}/favicon.png`,
+      type: "image/png",
+    },
+    shortcut: `${basePath}/favicon.png`,
   },
   openGraph: {
     title: "Bugnut | Comics & Drawings",
