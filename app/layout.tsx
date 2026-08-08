@@ -1,8 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/chango/400.css";
 import "./globals.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#efe4ca",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bugnut.art"),
@@ -25,7 +32,14 @@ export const metadata: Metadata = {
       "I'm Bugnut. I make comics and other oddities. Have a look through my work, or buy yourself a copy or twelve.",
     type: "website",
     url: "https://bugnut.art",
-    images: [`${basePath}/comics/feed/thumb.jpg`],
+    images: [
+      {
+        url: `${basePath}/comics/feed/thumb.jpg`,
+        width: 500,
+        height: 714,
+        alt: "Feeding Time comic cover by Bugnut",
+      },
+    ],
   },
   alternates: {
     canonical: "https://bugnut.art",

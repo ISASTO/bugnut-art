@@ -3,6 +3,8 @@
 /* eslint-disable @next/next/no-img-element -- artwork is pre-optimized and exported statically */
 
 import {
+  type MouseEvent as ReactMouseEvent,
+  type TouchEvent as ReactTouchEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -22,13 +24,16 @@ import {
 } from "./artworks";
 
 const marqueeComics = [...miniComics, ...longerComics];
-const wordmarkLetters = [..."BUGNUT"];
+const wordmarkLetters = [...siteSettings.artistName.toUpperCase()];
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  year: "numeric",
+});
+
+type OpenArtwork = (artwork: Artwork, trigger?: HTMLElement | null) => void;
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${value}T12:00:00`));
+  return dateFormatter.format(new Date(`${value}T12:00:00`));
 }
 
 function artworkType(artwork: Artwork) {
@@ -37,13 +42,15 @@ function artworkType(artwork: Artwork) {
   return "One-pager";
 }
 
-function CoverMarquee({
-  onOpen,
-}: {
-  onOpen: (artwork: Artwork) => void;
-}) {
+function CoverMarquee({ onOpen }: { onOpen: OpenArtwork }) {
+  const [paused, setPaused] = useState(false);
+
   return (
-    <div className="cover-marquee" aria-label="Browse comic covers">
+    <div
+      className={`cover-marquee${paused ? " cover-marquee--paused" : ""}`}
+      aria-label="Comic cover carousel"
+      role="region"
+    >
       <div className="cover-marquee__fade cover-marquee__fade--left" />
       <div className="cover-marquee__fade cover-marquee__fade--right" />
       <div className="cover-marquee__track">
@@ -57,7 +64,7 @@ function CoverMarquee({
               <button
                 className={`marquee-cover marquee-cover--${index % 4}`}
                 key={`${copyIndex}-${artwork.id}`}
-                onClick={() => onOpen(artwork)}
+                onClick={(event) => onOpen(artwork, event.currentTarget)}
                 tabIndex={copyIndex === 1 ? -1 : 0}
                 type="button"
                 aria-label={`Read ${artwork.title}`}
@@ -68,12 +75,23 @@ function CoverMarquee({
                   width="500"
                   height="714"
                   loading={copyIndex === 0 && index < 6 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={copyIndex === 0 && index < 3 ? "high" : "auto"}
                 />
               </button>
             ))}
           </div>
         ))}
       </div>
+      <button
+        className="cover-marquee__control"
+        type="button"
+        onClick={() => setPaused((value) => !value)}
+        aria-pressed={paused}
+      >
+        <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
+        {paused ? "Play covers" : "Pause covers"}
+      </button>
     </div>
   );
 }
@@ -87,6 +105,7 @@ function SaleLink({ artwork }: { artwork: Artwork }) {
       href={artwork.shopUrl}
       target="_blank"
       rel="noreferrer"
+      aria-label={`Buy a physical copy of ${artwork.title}`}
     >
       Buy a physical copy <span aria-hidden="true">↗</span>
     </a>
@@ -98,13 +117,13 @@ function MiniCard({
   onOpen,
 }: {
   artwork: Artwork;
-  onOpen: (artwork: Artwork) => void;
+  onOpen: OpenArtwork;
 }) {
   return (
     <article className="mini-card">
       <button
         className="mini-card__reader"
-        onClick={() => onOpen(artwork)}
+        onClick={(event) => onOpen(artwork, event.currentTarget)}
         type="button"
         aria-label={`Read ${artwork.title}`}
       >
@@ -115,6 +134,7 @@ function MiniCard({
             width="500"
             height="714"
             loading="lazy"
+            decoding="async"
           />
           <span className="read-sticker">Read it</span>
         </span>
@@ -135,7 +155,7 @@ function FeaturedCard({
 }: {
   artwork: Artwork;
   index: number;
-  onOpen: (artwork: Artwork) => void;
+  onOpen: OpenArtwork;
 }) {
   return (
     <article className={`featured-card featured-card--${index + 1}`}>
@@ -144,8 +164,9 @@ function FeaturedCard({
       </div>
       <button
         className="featured-card__cover"
-        onClick={() => onOpen(artwork)}
+        onClick={(event) => onOpen(artwork, event.currentTarget)}
         type="button"
+        aria-label={`Read ${artwork.title}`}
       >
         <img
           src={thumbnailPath(artwork)}
@@ -153,6 +174,7 @@ function FeaturedCard({
           width="500"
           height="714"
           loading="lazy"
+          decoding="async"
         />
       </button>
       <div className="featured-card__copy">
@@ -160,8 +182,9 @@ function FeaturedCard({
         <div className="featured-card__actions">
           <button
             className="button button--ink"
-            onClick={() => onOpen(artwork)}
+            onClick={(event) => onOpen(artwork, event.currentTarget)}
             type="button"
+            aria-label={`Read ${artwork.title}`}
           >
             Read <span aria-hidden="true">→</span>
           </button>
@@ -218,7 +241,7 @@ function readerPositionLabel(artwork: Artwork, pages: number[]) {
   const fileNumber = first + 1;
   const isDoubleWidth = artwork.doubleWidthFiles?.includes(fileNumber);
   const start = first;
-  const end = isDoubleWidth ? start + 1 : pages.at(-1) ?? start;
+  const end = isDoubleWidth ? start + 1 : (pages.at(-1) ?? start);
 
   return start === end
     ? `Page ${start} of ${interiorTotal}`
@@ -234,8 +257,14 @@ function ComicReader({
 }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [narrow, setNarrow] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [turnDirection, setTurnDirection] = useState<"next" | "previous">(
+    "next",
+  );
+  const readerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 760px)");
@@ -260,12 +289,18 @@ function ComicReader({
 
   const previous = useCallback(() => {
     const target = groups[groupIndex - 1];
-    if (target) setPageIndex(target[0]);
+    if (target) {
+      setTurnDirection("previous");
+      setPageIndex(target[0]);
+    }
   }, [groupIndex, groups]);
 
   const next = useCallback(() => {
     const target = groups[groupIndex + 1];
-    if (target) setPageIndex(target[0]);
+    if (target) {
+      setTurnDirection("next");
+      setPageIndex(target[0]);
+    }
   }, [groupIndex, groups]);
 
   useEffect(() => {
@@ -274,9 +309,45 @@ function ComicReader({
     closeButtonRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-      if (event.key === "ArrowRight") next();
-      if (event.key === "ArrowLeft") previous();
+      if (event.key === "Escape") {
+        if (document.fullscreenElement) {
+          void document.exitFullscreen();
+        } else {
+          onClose();
+        }
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        next();
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        previous();
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(
+        readerRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((element) => element.getClientRects().length > 0);
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -285,6 +356,17 @@ function ComicReader({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [next, onClose, previous]);
+
+  useEffect(() => {
+    const updateFullscreen = () => {
+      setFullscreen(document.fullscreenElement === stageRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+    };
+  }, []);
 
   useEffect(() => {
     const nextGroup = groups[groupIndex + 1];
@@ -297,11 +379,32 @@ function ComicReader({
   }, [artwork, groupIndex, groups]);
 
   const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
+    if (document.fullscreenElement !== stageRef.current) {
       await stageRef.current?.requestFullscreen?.();
     } else {
       await document.exitFullscreen?.();
     }
+  };
+
+  const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+    const touch = event.changedTouches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+    touchStartRef.current = null;
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) {
+      return;
+    }
+
+    if (deltaX < 0) next();
+    else previous();
   };
 
   const canGoBack = groupIndex > 0;
@@ -310,10 +413,12 @@ function ComicReader({
 
   return (
     <div
+      ref={readerRef}
       className="reader"
       role="dialog"
       aria-modal="true"
       aria-labelledby="reader-title"
+      aria-describedby="reader-position"
       onMouseDown={(event) => {
         if (event.currentTarget === event.target) onClose();
       }}
@@ -329,6 +434,7 @@ function ComicReader({
             target="_blank"
             rel="noreferrer"
             className="reader__utility"
+            aria-label="Open the current page full-size in a new tab"
           >
             Full-size <span aria-hidden="true">↗</span>
           </a>
@@ -336,8 +442,9 @@ function ComicReader({
             className="reader__utility reader__fullscreen"
             onClick={toggleFullscreen}
             type="button"
+            aria-pressed={fullscreen}
           >
-            Fullscreen
+            {fullscreen ? "Exit fullscreen" : "Fullscreen"}
           </button>
           <button
             ref={closeButtonRef}
@@ -357,7 +464,7 @@ function ComicReader({
           onClick={previous}
           type="button"
           disabled={!canGoBack}
-          aria-label="Previous page"
+          aria-label="Previous page or spread"
         >
           <span aria-hidden="true">←</span>
         </button>
@@ -367,8 +474,16 @@ function ComicReader({
             visiblePages.length > 1 ? "reader__stage--spread" : ""
           }`}
           ref={stageRef}
+          onMouseDown={(event: ReactMouseEvent<HTMLDivElement>) => {
+            if (event.currentTarget === event.target) onClose();
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
-          <div className="reader__paper">
+          <div
+            className={`reader__paper reader__paper--${turnDirection}`}
+            key={`${artwork.id}-${groupIndex}-${narrow ? "narrow" : "wide"}`}
+          >
             {visiblePages.map((index) => (
               <img
                 key={index}
@@ -378,8 +493,17 @@ function ComicReader({
                     : "reader__page"
                 }
                 src={pagePath(artwork, index)}
-                alt={`${artwork.title}, page ${index + 1}`}
+                alt={`${artwork.title}. ${readerPositionLabel(artwork, [index])}.`}
+                width={
+                  artwork.doubleWidthFiles?.includes(index + 1) ? 1800 : 1260
+                }
+                height={
+                  artwork.doubleWidthFiles?.includes(index + 1) ? 1300 : 1800
+                }
                 onClick={canGoForward ? next : undefined}
+                data-can-advance={canGoForward ? "true" : "false"}
+                draggable="false"
+                decoding="async"
               />
             ))}
           </div>
@@ -390,7 +514,7 @@ function ComicReader({
           onClick={next}
           type="button"
           disabled={!canGoForward}
-          aria-label="Next page"
+          aria-label="Next page or spread"
         >
           <span aria-hidden="true">→</span>
         </button>
@@ -402,12 +526,14 @@ function ComicReader({
           onClick={previous}
           type="button"
           disabled={!canGoBack}
-          aria-label="Previous page"
+          aria-label="Previous page or spread"
         >
           ←
         </button>
         <div className="reader__progress">
-          <span>{positionLabel}</span>
+          <span id="reader-position" aria-live="polite" aria-atomic="true">
+            {positionLabel}
+          </span>
           <div className="reader__progress-track" aria-hidden="true">
             <i
               style={{
@@ -421,7 +547,7 @@ function ComicReader({
           onClick={next}
           type="button"
           disabled={!canGoForward}
-          aria-label="Next page"
+          aria-label="Next page or spread"
         >
           →
         </button>
@@ -432,6 +558,8 @@ function ComicReader({
 
 export default function Portfolio() {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const previousActiveIdRef = useRef<string | null>(null);
   const activeArtwork =
     artworks.find((artwork) => artwork.id === activeId) ?? null;
 
@@ -451,288 +579,352 @@ export default function Portfolio() {
     };
   }, []);
 
-  const openReader = useCallback((artwork: Artwork) => {
+  useEffect(() => {
+    if (previousActiveIdRef.current && !activeId) {
+      const frame = window.requestAnimationFrame(() => {
+        returnFocusRef.current?.focus();
+      });
+      previousActiveIdRef.current = activeId;
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    previousActiveIdRef.current = activeId;
+  }, [activeId]);
+
+  const openReader = useCallback<OpenArtwork>((artwork, trigger) => {
+    returnFocusRef.current =
+      trigger ??
+      (document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null);
     setActiveId(artwork.id);
-    window.history.pushState(null, "", `#read-${artwork.id}`);
+    window.history.pushState(
+      { bugnutReader: artwork.id },
+      "",
+      `#read-${artwork.id}`,
+    );
   }, []);
 
   const closeReader = useCallback(() => {
+    if (window.history.state?.bugnutReader === activeId) {
+      window.history.back();
+      return;
+    }
+
     setActiveId(null);
-    window.history.pushState(
+    window.history.replaceState(
       null,
       "",
       `${window.location.pathname}${window.location.search}`,
     );
-  }, []);
+  }, [activeId]);
 
   return (
     <>
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Bugnut home">
-          <span className="brand__name">BUGNUT</span>
-          <span className="brand__imprint">{siteSettings.imprintName}</span>
+      <div
+        className="site-shell"
+        inert={activeArtwork ? true : undefined}
+        aria-hidden={activeArtwork ? true : undefined}
+      >
+        <a className="skip-link" href="#main-content">
+          Skip to artwork
         </a>
-        <nav className="site-nav" aria-label="Main navigation">
-          <a href="#comics">Comics</a>
-          <a href="#other-work">Other work</a>
-          <a href="#about">About</a>
-          <a href="#bazaar">Bazaar</a>
-        </nav>
-        <a
-          className="header-contact"
-          href={`mailto:${siteSettings.contactEmail}`}
-        >
-          Contact <span aria-hidden="true">↗</span>
-        </a>
-      </header>
-
-      <main>
-        <section className="hero" id="top">
-          <div className="hero__intro">
-            <h1 className="bugnut-wordmark" aria-label="Bugnut">
-              <span
-                className="bugnut-wordmark__layer bugnut-wordmark__layer--shadow"
-                aria-hidden="true"
-              >
-                {wordmarkLetters.map((letter, index) => (
-                  <span
-                    className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
-                    key={`shadow-${letter}-${index}`}
-                  >
-                    {letter}
-                  </span>
-                ))}
-              </span>
-              <span
-                className="bugnut-wordmark__layer bugnut-wordmark__layer--face"
-                aria-hidden="true"
-              >
-                {wordmarkLetters.map((letter, index) => (
-                  <span
-                    className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
-                    key={`face-${letter}-${index}`}
-                  >
-                    {letter}
-                  </span>
-                ))}
-              </span>
-            </h1>
-            <p className="hero__descriptor">Comics &amp; drawings</p>
-            <p className="hero__greeting">
-              Hello! Have a look at my comics!
-            </p>
-            <a className="button button--red" href="#featured">
-              Browse comics <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-          <CoverMarquee onOpen={openReader} />
-        </section>
-
-        <section className="section section--featured" id="featured">
-          <div className="section-heading">
-            <h2>Featured minis</h2>
-          </div>
-          <div className="featured-grid">
-            {featuredMinis.map((artwork, index) => (
-              <FeaturedCard
-                artwork={artwork}
-                index={index}
-                key={artwork.id}
-                onOpen={openReader}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="section section--minis" id="comics">
-          <div className="section-heading section-heading--line">
-            <h2>All mini comics</h2>
-          </div>
-          <div className="mini-grid">
-            {miniComics.map((artwork) => (
-              <MiniCard
-                artwork={artwork}
-                key={artwork.id}
-                onOpen={openReader}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="section section--long">
-          <div className="section-heading">
-            <h2>Longer comics</h2>
-          </div>
-          <div className="long-grid">
-            {longerComics.map((artwork, index) => (
-              <article className={`long-card long-card--${index + 1}`} key={artwork.id}>
-                <button
-                  className="long-card__cover"
-                  onClick={() => openReader(artwork)}
-                  type="button"
-                >
-                  <img
-                    src={thumbnailPath(artwork)}
-                    alt={`${artwork.title} cover`}
-                    width="500"
-                    height="714"
-                    loading="lazy"
-                  />
-                </button>
-                <div className="long-card__copy">
-                  <p className="eyebrow">
-                    {artwork.pageCount} pages · {formatDate(artwork.completed)}
-                  </p>
-                  <h3>{artwork.title}</h3>
-                  {artwork.description ? <p>{artwork.description}</p> : null}
-                  <button
-                    className="button button--paper"
-                    onClick={() => openReader(artwork)}
-                    type="button"
-                  >
-                    Read <span aria-hidden="true">→</span>
-                  </button>
-                  <SaleLink artwork={artwork} />
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="section section--other" id="other-work">
-          <div className="section-heading section-heading--line">
-            <h2>Other work</h2>
-            <p>
-              This is where I put my single-page comics and other work that
-              doesn&apos;t quite fall into a neat category.
-            </p>
-          </div>
-          <div className="other-grid">
-            {otherWork.map((artwork, index) => (
-              <article className={`other-card other-card--${index + 1}`} key={artwork.id}>
-                <button
-                  className="other-card__image"
-                  onClick={() => openReader(artwork)}
-                  type="button"
-                >
-                  <img
-                    src={pagePath(artwork, 0)}
-                    alt={artwork.title}
-                    loading="lazy"
-                  />
-                </button>
-                <div>
-                  <h3>{artwork.title}</h3>
-                  <button
-                    className="text-button"
-                    onClick={() => openReader(artwork)}
-                    type="button"
-                  >
-                    View <span aria-hidden="true">→</span>
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="about" id="about">
-          <div className="about__label">
-            <span>Why I make comics</span>
-            <span className="about__doodle" aria-hidden="true">
-              ☺
+        <header className="site-header">
+          <a className="brand" href="#top" aria-label="Bugnut home">
+            <span className="brand__name">
+              {siteSettings.artistName.toUpperCase()}
             </span>
-          </div>
-          <div className="about__copy">
-            <p className="about__lead">
-              I make comics because it&apos;s fun.
-            </p>
-            <p>
-              Nothing is more satisfying to me than sitting down, pouring hours
-              of thought, love, and care into a page, and ending up with a
-              little physical piece of media I can share, one that
-              wouldn&apos;t otherwise exist. I get to listen to music, I get to
-              refine my process, and I get to enjoy every step of it.
-            </p>
-            <p>
-              The thing I find most fun about comics is the freedom. I get to
-              turn my silly ideas into silly scenarios and figure out a way to
-              turn those scenarios into easily digestible visual punchlines.
-            </p>
-          </div>
-          <aside className="about__aside">
-            <p>To someone who says they can&apos;t draw, I would say:</p>
-            <p className="about__yes">YES, YOU CAN!</p>
-            <p>
-              If you exist and are reading this, you can make art. Comics
-              aren&apos;t about realism. They&apos;re about expression. You
-              don&apos;t have to be “good” at drawing in order to express
-              yourself.
-            </p>
-            <p>
-              I could never communicate that as well as Lynda Barry, so I
-              recommend her book <cite>Making Comics</cite>{" "}
-              to anybody who thinks they can&apos;t draw.
-            </p>
-          </aside>
-        </section>
+            <span className="brand__imprint">{siteSettings.imprintName}</span>
+          </a>
+          <nav className="site-nav" aria-label="Main navigation">
+            <a href="#featured">Comics</a>
+            <a href="#other-work">Other work</a>
+            <a href="#about">About</a>
+            <a href="#bazaar">Bazaar</a>
+          </nav>
+          <a
+            className="header-contact"
+            href={`mailto:${siteSettings.contactEmail}`}
+          >
+            Contact <span aria-hidden="true">↗</span>
+          </a>
+        </header>
 
-        <section className="bazaar" id="bazaar">
-          <div className="bazaar__checker" aria-hidden="true" />
-          <div className="bazaar__copy">
-            <h2>Want one you can hold?</h2>
-            {siteSettings.shopUrl ? (
-              <>
-                <p>
+        <main id="main-content" tabIndex={-1}>
+          <section className="hero" id="top">
+            <div className="hero__intro">
+              <h1 className="bugnut-wordmark" aria-label="Bugnut">
+                <span
+                  className="bugnut-wordmark__layer bugnut-wordmark__layer--shadow"
+                  aria-hidden="true"
+                >
+                  {wordmarkLetters.map((letter, index) => (
+                    <span
+                      className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
+                      key={`shadow-${letter}-${index}`}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </span>
+                <span
+                  className="bugnut-wordmark__layer bugnut-wordmark__layer--face"
+                  aria-hidden="true"
+                >
+                  {wordmarkLetters.map((letter, index) => (
+                    <span
+                      className={`bugnut-wordmark__letter bugnut-wordmark__letter--${index + 1}`}
+                      key={`face-${letter}-${index}`}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </span>
+              </h1>
+              <p className="hero__descriptor">Comics &amp; drawings</p>
+              <p className="hero__greeting">Hello! Have a look at my comics!</p>
+              <a className="button button--red" href="#featured">
+                Browse comics <span aria-hidden="true">↓</span>
+              </a>
+            </div>
+            <CoverMarquee onOpen={openReader} />
+          </section>
+
+          <section className="section section--featured" id="featured">
+            <div className="section-heading">
+              <h2>Featured minis</h2>
+            </div>
+            <div className="featured-grid">
+              {featuredMinis.map((artwork, index) => (
+                <FeaturedCard
+                  artwork={artwork}
+                  index={index}
+                  key={artwork.id}
+                  onOpen={openReader}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="section section--minis" id="comics">
+            <div className="section-heading section-heading--line">
+              <h2>All mini comics</h2>
+            </div>
+            <div className="mini-grid">
+              {miniComics.map((artwork) => (
+                <MiniCard
+                  artwork={artwork}
+                  key={artwork.id}
+                  onOpen={openReader}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="section section--long">
+            <div className="section-heading">
+              <h2>Longer comics</h2>
+            </div>
+            <div className="long-grid">
+              {longerComics.map((artwork, index) => (
+                <article
+                  className={`long-card long-card--${index + 1}`}
+                  key={artwork.id}
+                >
+                  <button
+                    className="long-card__cover"
+                    onClick={(event) =>
+                      openReader(artwork, event.currentTarget)
+                    }
+                    type="button"
+                    aria-label={`Read ${artwork.title}`}
+                  >
+                    <img
+                      src={thumbnailPath(artwork)}
+                      alt={`${artwork.title} cover`}
+                      width="500"
+                      height="714"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </button>
+                  <div className="long-card__copy">
+                    <p className="eyebrow">
+                      {artwork.pageCount} pages ·{" "}
+                      {formatDate(artwork.completed)}
+                    </p>
+                    <h3>{artwork.title}</h3>
+                    {artwork.description ? <p>{artwork.description}</p> : null}
+                    <button
+                      className="button button--paper"
+                      onClick={(event) =>
+                        openReader(artwork, event.currentTarget)
+                      }
+                      type="button"
+                      aria-label={`Read ${artwork.title}`}
+                    >
+                      Read <span aria-hidden="true">→</span>
+                    </button>
+                    <SaleLink artwork={artwork} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="section section--other" id="other-work">
+            <div className="section-heading section-heading--line">
+              <h2>Other work</h2>
+              <p>
+                This is where I put my single-page comics and other work that
+                doesn&apos;t quite fall into a neat category.
+              </p>
+            </div>
+            <div className="other-grid">
+              {otherWork.map((artwork, index) => (
+                <article
+                  className={`other-card other-card--${index + 1}`}
+                  key={artwork.id}
+                >
+                  <button
+                    className="other-card__image"
+                    onClick={(event) =>
+                      openReader(artwork, event.currentTarget)
+                    }
+                    type="button"
+                    aria-label={`View ${artwork.title}`}
+                  >
+                    <img
+                      src={pagePath(artwork, 0)}
+                      alt={artwork.title}
+                      width="1270"
+                      height="1800"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </button>
+                  <div>
+                    <h3>{artwork.title}</h3>
+                    <button
+                      className="text-button"
+                      onClick={(event) =>
+                        openReader(artwork, event.currentTarget)
+                      }
+                      type="button"
+                      aria-label={`View ${artwork.title}`}
+                    >
+                      View <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="about" id="about">
+            <div className="about__label">
+              <h2>Why I make comics</h2>
+              <span className="about__doodle" aria-hidden="true">
+                ☺
+              </span>
+            </div>
+            <div className="about__copy">
+              <p className="about__lead">
+                I make comics because it&apos;s fun.
+              </p>
+              <p>
+                Nothing is more satisfying to me than sitting down, pouring
+                hours of thought, love, and care into a page, and ending up with
+                a little physical piece of media I can share, one that
+                wouldn&apos;t otherwise exist. I get to listen to music, I get
+                to refine my process, and I get to enjoy every step of it.
+              </p>
+              <p>
+                The thing I find most fun about comics is the freedom. I get to
+                turn my silly ideas into silly scenarios and figure out a way to
+                turn those scenarios into easily digestible visual punchlines.
+              </p>
+            </div>
+            <aside className="about__aside">
+              <p>To someone who says they can&apos;t draw, I would say:</p>
+              <p className="about__yes">YES, YOU CAN!</p>
+              <p>
+                If you exist and are reading this, you can make art. Comics
+                aren&apos;t about realism. They&apos;re about expression. You
+                don&apos;t have to be “good” at drawing in order to express
+                yourself.
+              </p>
+              <p>
+                I could never communicate that as well as Lynda Barry, so I
+                recommend her book <cite>Making Comics</cite> to anybody who
+                thinks they can&apos;t draw.
+              </p>
+            </aside>
+          </section>
+
+          <section className="bazaar" id="bazaar">
+            <div className="bazaar__checker" aria-hidden="true" />
+            <div className="bazaar__copy">
+              <h2>Want one you can hold?</h2>
+              {siteSettings.shopUrl ? (
+                <>
+                  <p>
+                    <a
+                      className="bazaar__store-link"
+                      href={siteSettings.shopUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Click here to visit my store, where you can buy physical
+                      copies of my comics (and more!)
+                      <span aria-hidden="true"> ↗</span>
+                    </a>
+                  </p>
                   <a
-                    className="bazaar__store-link"
+                    className="button button--paper"
                     href={siteSettings.shopUrl}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Click here to visit my store, where you can buy physical
-                    copies of my comics (and more!)
-                    <span aria-hidden="true"> ↗</span>
+                    Visit the Bazaar <span aria-hidden="true">↗</span>
                   </a>
-                </p>
-                <a
-                  className="button button--paper"
-                  href={siteSettings.shopUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Visit the Bazaar <span aria-hidden="true">↗</span>
-                </a>
-              </>
-            ) : (
-              <span className="coming-soon">Opening soon</span>
-            )}
-          </div>
-          <div className="bazaar__stamp" aria-hidden="true">
-            <span>BUGNUT</span>
-            <strong>BAZAAR</strong>
-          </div>
-        </section>
-      </main>
+                </>
+              ) : (
+                <span className="coming-soon">Opening soon</span>
+              )}
+            </div>
+            <div className="bazaar__stamp" aria-hidden="true">
+              <span>{siteSettings.artistName.toUpperCase()}</span>
+              <strong>
+                {siteSettings.shopName
+                  .replace(`${siteSettings.artistName} `, "")
+                  .toUpperCase()}
+              </strong>
+            </div>
+          </section>
+        </main>
 
-      <footer className="site-footer">
-        <div>
-          <span className="site-footer__brand">BUGNUT</span>
-        </div>
-        <div className="site-footer__contact">
-          <p>Have something to say? Send me a message! Anything you want!</p>
-          <a href={`mailto:${siteSettings.contactEmail}`}>
-            {siteSettings.contactEmail} <span aria-hidden="true">↗</span>
+        <footer className="site-footer">
+          <div>
+            <span className="site-footer__brand">
+              {siteSettings.artistName.toUpperCase()}
+            </span>
+          </div>
+          <div className="site-footer__contact">
+            <p>Have something to say? Send me a message! Anything you want!</p>
+            <a href={`mailto:${siteSettings.contactEmail}`}>
+              {siteSettings.contactEmail} <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <a className="back-to-top" href="#top">
+            Back to top <span aria-hidden="true">↑</span>
           </a>
-        </div>
-        <a className="back-to-top" href="#top">
-          Back to top <span aria-hidden="true">↑</span>
-        </a>
-        <p className="site-footer__fine">
-          © {new Date().getFullYear()} Bugnut · Published by{" "}
-          {siteSettings.imprintName}
-        </p>
-      </footer>
+          <p className="site-footer__fine">
+            © {new Date().getFullYear()} {siteSettings.artistName} · Published
+            by {siteSettings.imprintName}
+          </p>
+        </footer>
+      </div>
 
       {activeArtwork ? (
         <ComicReader

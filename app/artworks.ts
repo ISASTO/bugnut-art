@@ -142,7 +142,9 @@ export const artworks: Artwork[] = [
 
 export const miniComics = artworks.filter((artwork) => artwork.kind === "mini");
 export const featuredMinis = miniComics.filter((artwork) => artwork.featured);
-export const longerComics = artworks.filter((artwork) => artwork.kind === "long");
+export const longerComics = artworks.filter(
+  (artwork) => artwork.kind === "long",
+);
 export const otherWork = artworks.filter((artwork) => artwork.kind === "other");
 
 export function assetPath(path: string) {
