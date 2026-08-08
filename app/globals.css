@@ -138,14 +138,6 @@ img {
   letter-spacing: -0.04em;
 }
 
-.brand__imprint {
-  color: var(--ink-soft);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
 .site-nav {
   display: flex;
   justify-content: center;
@@ -454,42 +446,6 @@ img {
   display: flex;
   width: max-content;
   animation: marquee 64s linear infinite;
-}
-
-.cover-marquee:hover .cover-marquee__track,
-.cover-marquee:has(.marquee-cover:focus-visible) .cover-marquee__track,
-.cover-marquee--paused .cover-marquee__track {
-  animation-play-state: paused;
-}
-
-.cover-marquee__control {
-  position: absolute;
-  z-index: 4;
-  right: var(--page-gutter);
-  bottom: 0.15rem;
-  display: inline-flex;
-  min-height: 44px;
-  padding: 0.45rem 0.72rem;
-  align-items: center;
-  gap: 0.45rem;
-  border: 1.5px solid var(--ink);
-  color: var(--ink);
-  background: rgba(248, 241, 223, 0.94);
-  box-shadow: 3px 3px 0 var(--ink);
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    box-shadow 140ms ease,
-    transform 140ms ease;
-}
-
-.cover-marquee__control:hover,
-.cover-marquee__control:focus-visible {
-  box-shadow: 1px 1px 0 var(--ink);
-  transform: translate(2px, 2px);
 }
 
 .cover-marquee__set {
@@ -1402,10 +1358,6 @@ img {
     grid-template-columns: auto 1fr auto;
   }
 
-  .brand__imprint {
-    display: none;
-  }
-
   .long-card {
     grid-template-columns: minmax(125px, 0.65fr) minmax(0, 1fr);
   }
@@ -1717,10 +1669,6 @@ img {
 
   .cover-marquee__track {
     transform: none;
-  }
-
-  .cover-marquee__control {
-    display: none;
   }
 
   .bugnut-wordmark__letter {
