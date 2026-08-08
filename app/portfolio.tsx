@@ -43,11 +43,9 @@ function artworkType(artwork: Artwork) {
 }
 
 function CoverMarquee({ onOpen }: { onOpen: OpenArtwork }) {
-  const [paused, setPaused] = useState(false);
-
   return (
     <div
-      className={`cover-marquee${paused ? " cover-marquee--paused" : ""}`}
+      className="cover-marquee"
       aria-label="Comic cover carousel"
       role="region"
     >
@@ -83,15 +81,6 @@ function CoverMarquee({ onOpen }: { onOpen: OpenArtwork }) {
           </div>
         ))}
       </div>
-      <button
-        className="cover-marquee__control"
-        type="button"
-        onClick={() => setPaused((value) => !value)}
-        aria-pressed={paused}
-      >
-        <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
-        {paused ? "Play covers" : "Pause covers"}
-      </button>
     </div>
   );
 }
@@ -634,7 +623,6 @@ export default function Portfolio() {
             <span className="brand__name">
               {siteSettings.artistName.toUpperCase()}
             </span>
-            <span className="brand__imprint">{siteSettings.imprintName}</span>
           </a>
           <nav className="site-nav" aria-label="Main navigation">
             <a href="#featured">Comics</a>
