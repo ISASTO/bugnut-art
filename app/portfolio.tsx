@@ -639,7 +639,6 @@ export default function Portfolio() {
           <nav className="site-nav" aria-label="Main navigation">
             <a href="#featured">Comics</a>
             <a href="#other-work">Other work</a>
-            <a href="#about">About</a>
             <a href="#bazaar">Bazaar</a>
           </nav>
           <a
@@ -819,47 +818,6 @@ export default function Portfolio() {
                 </article>
               ))}
             </div>
-          </section>
-
-          <section className="about" id="about">
-            <div className="about__label">
-              <h2>Why I make comics</h2>
-              <span className="about__doodle" aria-hidden="true">
-                ☺
-              </span>
-            </div>
-            <div className="about__copy">
-              <p className="about__lead">
-                I make comics because it&apos;s fun.
-              </p>
-              <p>
-                Nothing is more satisfying to me than sitting down, pouring
-                hours of thought, love, and care into a page, and ending up with
-                a little physical piece of media I can share, one that
-                wouldn&apos;t otherwise exist. I get to listen to music, I get
-                to refine my process, and I get to enjoy every step of it.
-              </p>
-              <p>
-                The thing I find most fun about comics is the freedom. I get to
-                turn my silly ideas into silly scenarios and figure out a way to
-                turn those scenarios into easily digestible visual punchlines.
-              </p>
-            </div>
-            <aside className="about__aside">
-              <p>To someone who says they can&apos;t draw, I would say:</p>
-              <p className="about__yes">YES, YOU CAN!</p>
-              <p>
-                If you exist and are reading this, you can make art. Comics
-                aren&apos;t about realism. They&apos;re about expression. You
-                don&apos;t have to be “good” at drawing in order to express
-                yourself.
-              </p>
-              <p>
-                I could never communicate that as well as Lynda Barry, so I
-                recommend her book <cite>Making Comics</cite> to anybody who
-                thinks they can&apos;t draw.
-              </p>
-            </aside>
           </section>
 
           <section className="bazaar" id="bazaar">
