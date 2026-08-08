@@ -981,97 +981,6 @@ img {
   cursor: pointer;
 }
 
-.about {
-  display: grid;
-  grid-template-columns: 0.65fr 1.5fr 0.85fr;
-  gap: clamp(2rem, 5vw, 6rem);
-  align-items: start;
-  padding: clamp(5.5rem, 10vw, 10rem) max(5vw, calc((100vw - 1280px) / 2));
-  border-top: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
-  color: var(--paper-light);
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.025)),
-    var(--green);
-}
-
-.about__label {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.about__label h2 {
-  margin: 0;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-}
-
-.about__doodle {
-  display: grid;
-  width: 5.2rem;
-  height: 5.2rem;
-  place-items: center;
-  border: 2px solid var(--paper-light);
-  border-radius: 46% 54% 41% 59% / 51% 43% 57% 49%;
-  font-family: var(--serif);
-  font-size: 2.7rem;
-  transform: rotate(-8deg);
-}
-
-.about__copy p {
-  margin: 0 0 1.5rem;
-  color: rgba(251, 247, 236, 0.86);
-  font-family: var(--serif);
-  font-size: clamp(1.12rem, 1.65vw, 1.4rem);
-  line-height: 1.7;
-  text-wrap: pretty;
-}
-
-.about__copy .about__lead {
-  margin-bottom: 1.6rem;
-  color: var(--paper-light);
-  font-size: clamp(2.5rem, 4.6vw, 5.2rem);
-  font-weight: 900;
-  letter-spacing: -0.055em;
-  line-height: 1;
-}
-
-.about__aside {
-  padding: clamp(1.4rem, 2.7vw, 2.4rem);
-  border: 2px solid var(--paper-light);
-  color: var(--ink);
-  background: var(--yellow);
-  box-shadow: 7px 7px 0 rgba(31, 49, 33, 0.7);
-  transform: rotate(1.2deg);
-}
-
-.about__aside p {
-  margin: 0 0 1.1rem;
-}
-
-.about__aside p:last-child {
-  margin-bottom: 0;
-}
-
-.about__aside .about__yes {
-  font-family: var(--serif);
-  font-size: clamp(2rem, 3.2vw, 3.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
-}
-
-.about__aside cite {
-  font-family: var(--serif);
-  font-weight: 700;
-}
-
 .bazaar {
   position: relative;
   display: grid;
@@ -1257,8 +1166,6 @@ img {
 
 .reader button:focus-visible,
 .reader a:focus-visible,
-.about button:focus-visible,
-.about a:focus-visible,
 .bazaar button:focus-visible,
 .bazaar a:focus-visible,
 .site-footer button:focus-visible,
@@ -1503,10 +1410,6 @@ img {
     grid-template-columns: minmax(125px, 0.65fr) minmax(0, 1fr);
   }
 
-  .about {
-    grid-template-columns: 0.45fr 1.4fr 0.9fr;
-    gap: 2.5rem;
-  }
 }
 
 @media (max-width: 860px) {
@@ -1571,14 +1474,6 @@ img {
     grid-template-columns: minmax(180px, 0.65fr) minmax(0, 1fr);
     gap: 2rem;
     align-items: center;
-  }
-
-  .about {
-    grid-template-columns: 1fr 2fr;
-  }
-
-  .about__aside {
-    grid-column: 2;
   }
 
   .bazaar {
@@ -1762,28 +1657,6 @@ img {
   .other-card:last-child {
     grid-column: auto;
     display: flex;
-  }
-
-  .about {
-    grid-template-columns: 1fr;
-    padding-right: 1.2rem;
-    padding-left: 1.2rem;
-  }
-
-  .about__label {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .about__doodle {
-    width: 4rem;
-    height: 4rem;
-    font-size: 2rem;
-  }
-
-  .about__aside {
-    grid-column: auto;
   }
 
   .bazaar {
