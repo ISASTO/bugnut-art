@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAGES: "true"
-      NEXT_PUBLIC_BASE_PATH: "/bugnut-art"
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
