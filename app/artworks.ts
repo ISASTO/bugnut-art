@@ -15,7 +15,7 @@ export type Artwork = {
 export const siteSettings = {
   artistName: "Bugnut",
   imprintName: "Bugnut Books",
-  contactEmail: "hello@bugnut.art",
+  contactEmail: "BugnutBuglehorn@proton.me",
   shopName: "Bugnut Bazaar",
   shopUrl: null as string | null,
 };
