@@ -44,8 +44,7 @@ No layout changes are necessary.
 
 ## Contact address
 
-The public address is `hello@bugnut.art`. Configure forwarding for that address
-with the domain's email provider before announcing the site.
+The public address is `BugnutBuglehorn@proton.me`.
 
 ## GitHub Pages
 
